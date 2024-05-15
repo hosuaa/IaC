@@ -36,6 +36,15 @@ nsg rules: Only 22
    6. With the key copied over, test the key works by sshing from the controller into the app or db by sshing like normal
    7. An error will still show: ansible is looking for the ssh key in the hosts file NOT the .ssh file. We need to link our ssh key in the hosts file:
    ![alt text](image-3.png)
+```
+[app]
+
+63.35.182.94 ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/tech258.pem
+
+[db]
+
+52.16.45.148 ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/tech258.pem
+```
    Now we can ping as normal
    ![alt text](image-4.png)
 5. We can run linux commands on any agent from the controller, without ansible being installed on the agent (agentless): `sudo ansible app -a "[command]"`
@@ -44,3 +53,61 @@ nsg rules: Only 22
    3. Check with `sudo ansible all -a "ls"`
    ![alt text](image-5.png)
 6. See how ansible actually works with the `-vvv` flag: `sudo ansible all -a "ls" -vvv`
+
+## Playbooks to install Nginx on the app from the controller
+
+Playbooks are used to communicate with agents, and we can do things like install dependencies and deploy apps on our agents with them. Playbooks are written in YAML and so are files that end with `.yaml` or `.yml`
+
+### YAML syntax
+
+All YAML files start with `---` (best practise)
+
+Comments start with '#'
+
+Most playbooks start similarily:
+```yaml
+# specify which hosts to communicate with
+- hosts: app
+  
+# gather logs
+  gather_facts: yes
+
+# use sudo on commands
+  become: true
+```
+Notably indentation is very important. After specifying the host, use 2 spaces (DO NOT USE TAB) and so thats the code block.
+
+Then we need to specify tasks for the playbook to complete (pretty much jobs in jenkins):
+
+```yaml
+  tasks:
+  - name: Installing Nginx web server
+    apt: pkg=nginx state=present
+```
+
+This installs nginx on hosts. You should name each task, as its useful to see each task run when we run the playbook
+
+ There is a lot of specific syntax for some commands (e.g. git clone, using npm, and so on) so its important to look things up. There is a file install-app.yml which deploys our app to the app instance, which uses variables and so on.
+
+We then run a playbook with `sudo ansible-playbook playbook.yml`
+
+![alt text](image-6.png)
+
+If any stage fails, it will tell you in the terminal:
+
+![alt text](image-7.png)
+
+## Integrating the Database
+
+```bash
+# TODO
+# deleted the default mongo.conf rm -rf /etc/mongod.conf
+# create mongod.conf in the controller - with required configuration
+# allow 27017 from app or 0000
+# restart mongodb
+# enable mongodb
+# create an env DB_HOST=db-ip:27017/posts*
+# back to the web server restart the app/npm start
+```
+
+*Create the environment variable manually by manually sshing into the app intance and running `export DB_HOST=mongodb://private_db_ip:27017/posts`

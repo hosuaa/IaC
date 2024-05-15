@@ -1,0 +1,44 @@
+# a playbook to install nodejs and copy the app code over and run the app
+---
+# add host (app)
+- hosts: app
+# logs
+  gather_facts: yes
+# sudo
+  become: true
+  vars:
+#    app_repo_url: 'git@github.com:hosuaa/cicd.git'
+    app_repo_url: 'https://github.com/hosuaa/cicd.git'
+    app_dest: '/home/ubuntu/app'
+# tasks - install node js, copy app code, run app
+  tasks:
+# install nodejs
+  - name: Installing nodejs
+    apt: pkg=nodejs state=present
+# install npm
+  - name: Installing npm
+    apt: pkg=npm state=present
+# install pm2
+  - name: Installing pm2
+    npm:
+      name: pm2@2.6.0
+      global: yes
+# get repo
+  - name: Clone the repo
+    git:
+      repo: "{{ app_repo_url }}"
+      dest: "{{ app_dest }}"
+      update: yes
+#      key_file: /home/ubuntu/.ssh/tech258_joshual_cicdkey
+# install app
+  - name: Running npm install
+    npm:
+      path: "{{ app_dest }}/app"
+# stop previous pm2 apps
+  - name: Killing previous PM2s
+    command: pm2 kill
+# start app
+  - name: Start the application with PM2
+    command: pm2 start app.js
+    args:
+      chdir: "{{ app_dest }}/app"

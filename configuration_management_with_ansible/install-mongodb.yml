@@ -1,0 +1,14 @@
+# install and run mongodb on the db instance
+---
+# specify which hosts to communicate with
+- hosts: db
+
+# gather logs
+  gather_facts: yes
+
+# use sudo on commands
+  become: true
+
+  tasks:
+  - name: Install and configure MongoDB
+    apt: pkg=mongodb state=present

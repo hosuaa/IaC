@@ -1,0 +1,22 @@
+# creating a playbook to install, configure nginx in the web server
+---
+# YAML starts with 3 dashes (best practice)
+# to indent use space not tab (esp on vscode)
+
+# add the name of the host (app)
+- hosts: app
+
+# see the logs (gather facts)
+# this belongs to the host (with 2 spaces: inline with the 'h' of hosts)
+  gather_facts: yes
+
+# provide admin access - sudo
+  become: true
+
+# add instructions to install nginx on the app
+# now tasks has a block, so indent it again
+# name is for logs
+# state=present means nginx is in a running state
+  tasks:
+  - name: Installing Nginx web server
+    apt: pkg=nginx state=present
